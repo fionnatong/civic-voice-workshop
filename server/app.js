@@ -35,13 +35,20 @@ export async function createApp(options = {}) {
   app.post("/api/feedback", async (req, res) => {
     const { nric, name, message } = req.body ?? {};
     if (!message) return res.status(400).json({ error: "Please enter feedback." });
+    let reference;
+    do {
+      reference = `CV-${crypto.randomInt(100000, 1000000)}`;
+    } while (db.data.feedback.some((item) => item.reference === reference));
+
     const feedback = {
       id: crypto.randomUUID(), nric, name, message, category: "General", status: "New",
+      reference,
       createdAt: new Date().toISOString(),
     };
     db.data.feedback.unshift(feedback);
     await db.write();
-    return res.status(201).json({ feedback });
+    const { id: _id, ...publicFeedback } = feedback;
+    return res.status(201).json({ feedback: publicFeedback });
   });
 
   return app;
