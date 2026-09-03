@@ -3,6 +3,32 @@ import express from "express";
 import cors from "cors";
 import { createDb } from "./lib/db.js";
 
+function filterFeedback(feedback, query) {
+  return feedback.filter((item) => (
+    (!query.category || item.category === query.category)
+    && (!query.status || item.status === query.status)
+  ));
+}
+
+function csvCell(value) {
+  const text = String(value ?? "");
+  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+function feedbackCsv(feedback) {
+  const columns = [
+    ["Reference", "id"],
+    ["NRIC", "nric"],
+    ["Name", "name"],
+    ["Category", "category"],
+    ["Status", "status"],
+    ["Feedback", "message"],
+    ["Received at", "createdAt"],
+  ];
+  const rows = [columns.map(([title]) => title), ...feedback.map((item) => columns.map(([, key]) => item[key]))];
+  return `${rows.map((row) => row.map(csvCell).join(",")).join("\r\n")}\r\n`;
+}
+
 export async function createApp(options = {}) {
   const db = options.db ?? (await createDb());
   const app = express();
@@ -30,6 +56,18 @@ export async function createApp(options = {}) {
       return res.status(403).json({ error: "Admin access required." });
     }
     return res.json({ feedback: db.data.feedback });
+  });
+
+  app.get("/api/feedback/export", (req, res) => {
+    if (req.header("x-user-role") !== "admin") {
+      return res.status(403).json({ error: "Admin access required." });
+    }
+
+    const feedback = filterFeedback(db.data.feedback, req.query);
+    res
+      .type("text/csv")
+      .attachment("civic-voice-feedback.csv")
+      .send(feedbackCsv(feedback));
   });
 
   app.post("/api/feedback", async (req, res) => {
