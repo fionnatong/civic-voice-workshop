@@ -29,7 +29,17 @@ export async function createApp(options = {}) {
     if (req.header("x-user-role") !== "admin") {
       return res.status(403).json({ error: "Admin access required." });
     }
-    return res.json({ feedback: db.data.feedback });
+    const requestedPage = Number.parseInt(req.query.page, 10);
+    const page = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+    const pageSize = 10;
+    const totalItems = db.data.feedback.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    const currentPage = Math.min(page, totalPages);
+    const start = (currentPage - 1) * pageSize;
+    return res.json({
+      feedback: db.data.feedback.slice(start, start + pageSize),
+      pagination: { page: currentPage, pageSize, totalItems, totalPages },
+    });
   });
 
   app.post("/api/feedback", async (req, res) => {

@@ -16,6 +16,6 @@ export function login(credentials) {
 export function submitFeedback(feedback) {
   return api("/api/feedback", { method: "POST", body: JSON.stringify(feedback) });
 }
-export function getFeedback(user) {
-  return api("/api/feedback", { headers: { "x-user-role": user.role } });
+export function getFeedback(user, page = 1) {
+  return api(`/api/feedback?page=${page}`, { headers: { "x-user-role": user.role } });
 }

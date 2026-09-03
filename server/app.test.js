@@ -42,4 +42,15 @@ describe("CivicVoice baseline API", () => {
     const response = await request(app).get("/api/feedback");
     expect(response.status).toBe(403);
   });
+
+  it("paginates the feedback inbox in groups of ten", async () => {
+    const app = await testApp();
+    await Promise.all(Array.from({ length: 10 }, (_, index) => request(app).post("/api/feedback").send({
+      nric: "S0000001A", name: "Aisha Rahman", message: `Feedback ${index}`,
+    })));
+    const response = await request(app).get("/api/feedback?page=2").set("x-user-role", "admin");
+    expect(response.status).toBe(200);
+    expect(response.body.pagination).toMatchObject({ page: 2, pageSize: 10, totalItems: 11, totalPages: 2 });
+    expect(response.body.feedback).toHaveLength(1);
+  });
 });
