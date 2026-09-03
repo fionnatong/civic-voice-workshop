@@ -42,4 +42,21 @@ describe("CivicVoice baseline API", () => {
     const response = await request(app).get("/api/feedback");
     expect(response.status).toBe(403);
   });
+
+  it("returns every stored field for an admin viewing feedback details", async () => {
+    const app = await testApp();
+    const response = await request(app)
+      .get("/api/feedback/fb-seed-1")
+      .set("x-user-role", "admin");
+    expect(response.status).toBe(200);
+    expect(response.body.feedback).toEqual({
+      id: "fb-seed-1",
+      nric: "S0000001A",
+      name: "Aisha Rahman",
+      message: "The new sheltered walkway near the library is helpful, but the lights turn off too early.",
+      category: "General",
+      status: "New",
+      createdAt: "2026-08-29T09:14:00.000Z",
+    });
+  });
 });

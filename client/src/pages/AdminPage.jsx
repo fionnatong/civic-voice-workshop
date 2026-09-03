@@ -1,13 +1,56 @@
 import { useEffect, useState } from "react";
-import { getFeedback } from "../api";
+import { getFeedback, getFeedbackDetail } from "../api";
 
 export function AdminPage({ user }) {
   const [feedback, setFeedback] = useState([]);
   const [error, setError] = useState("");
+  const [selectedFeedback, setSelectedFeedback] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
   useEffect(() => {
     getFeedback(user).then((response) => setFeedback(response.feedback)).catch((requestError) => setError(requestError.message));
   }, [user]);
+
+  async function viewFeedback(id) {
+    setError("");
+    setLoadingDetail(true);
+    try {
+      const response = await getFeedbackDetail(user, id);
+      setSelectedFeedback(response.feedback);
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setLoadingDetail(false);
+    }
+  }
+
+  if (selectedFeedback) {
+    const item = selectedFeedback;
+    return (
+      <main className="page-shell admin-shell">
+        <button className="back-button" type="button" onClick={() => setSelectedFeedback(null)}>
+          ← Back to feedback inbox
+        </button>
+        <div className="page-heading">
+          <div className="eyebrow">Feedback detail</div>
+          <h1>Feedback from {item.name}</h1>
+          <p>Submitted {new Date(item.createdAt).toLocaleString()}.</p>
+        </div>
+        {error && <p className="error-message">{error}</p>}
+        <section className="feedback-detail" aria-label="Feedback details">
+          <dl>
+            <div><dt>Reference</dt><dd>{item.id}</dd></div>
+            <div><dt>Name</dt><dd>{item.name}</dd></div>
+            <div><dt>NRIC</dt><dd>{item.nric}</dd></div>
+            <div><dt>Category</dt><dd>{item.category}</dd></div>
+            <div><dt>Status</dt><dd><span className="status-pill">{item.status}</span></dd></div>
+            <div><dt>Submitted</dt><dd>{new Date(item.createdAt).toLocaleString()}</dd></div>
+            <div className="detail-message"><dt>Message</dt><dd>{item.message}</dd></div>
+          </dl>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="page-shell admin-shell">
@@ -25,7 +68,12 @@ export function AdminPage({ user }) {
               <div className="feedback-meta">{item.name} · {new Date(item.createdAt).toLocaleDateString()}</div>
               <p>{item.message}</p>
             </div>
-            <span className="status-pill">{item.status}</span>
+            <div className="feedback-actions">
+              <span className="status-pill">{item.status}</span>
+              <button className="text-button" type="button" onClick={() => viewFeedback(item.id)} disabled={loadingDetail}>
+                View details
+              </button>
+            </div>
           </article>
         ))}
       </section>
