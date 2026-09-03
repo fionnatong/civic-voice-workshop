@@ -19,3 +19,17 @@ export function submitFeedback(feedback) {
 export function getFeedback(user) {
   return api("/api/feedback", { headers: { "x-user-role": user.role } });
 }
+
+export async function exportFeedbackCsv(user, filters = {}) {
+  const query = new URLSearchParams(
+    Object.entries(filters).filter(([, value]) => value),
+  );
+  const response = await fetch(`${API_URL}/api/feedback/export?${query}`, {
+    headers: { "x-user-role": user.role },
+  });
+  if (!response.ok) {
+    const body = await response.json();
+    throw new Error(body.error ?? "Unable to export feedback.");
+  }
+  return response.blob();
+}
