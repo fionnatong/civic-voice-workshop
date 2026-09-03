@@ -22,7 +22,11 @@ export function LoginPage({ onLogin }) {
       const session = await login({ nric: normalizeWorkshopId(nric), password, role });
       onLogin(session);
     } catch (requestError) {
-      setError(requestError.message);
+      setError(
+        requestError.status === 429
+          ? "Too many failed sign-in attempts. Please wait a few minutes before trying again."
+          : requestError.message,
+      );
     } finally {
       setBusy(false);
     }
