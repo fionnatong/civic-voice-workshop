@@ -48,11 +48,14 @@ textarea { resize: vertical; line-height: 1.6; }
 .admin-shell { max-width: 1050px; }
 .list-header { display: flex; justify-content: space-between; padding-bottom: 18px; border-bottom: 1px solid #eceae4; }
 .list-header span { color: #69747b; font-size: 14px; }
+.feedback-search { margin: 20px 0; }
+.feedback-search input { margin-top: 0; }
 .feedback-row { display: flex; justify-content: space-between; gap: 24px; padding: 20px 0; border-bottom: 1px solid #eceae4; }
 .feedback-row:last-child { border-bottom: 0; padding-bottom: 0; }
 .feedback-row p { margin: 8px 0 0; line-height: 1.55; }
 .feedback-meta { color: #69747b; font-size: 13px; }
 .status-pill { align-self: flex-start; white-space: nowrap; background: #fff1df; color: #9a5b00; border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 700; }
+.empty-state { margin: 0; padding: 24px 0 4px; color: #69747b; text-align: center; }
 @media (max-width: 760px) {
   .split-layout { grid-template-columns: 1fr; }
   .intro-panel { min-height: 360px; padding: 58px 8vw; }
