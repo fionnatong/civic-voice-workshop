@@ -41,5 +41,28 @@ describe("CivicVoice baseline API", () => {
     const app = await testApp();
     const response = await request(app).get("/api/feedback");
     expect(response.status).toBe(403);
+    expect(response.body).toEqual({ error: { code: "FORBIDDEN", message: "Admin access required." } });
+  });
+
+  it("uses the structured error contract for failed login and validation", async () => {
+    const app = await testApp();
+    const login = await request(app).post("/api/login").send({
+      nric: "S0000001A", password: "wrong", role: "citizen",
+    });
+    const feedback = await request(app).post("/api/feedback").send({ message: "" });
+
+    expect(login.status).toBe(401);
+    expect(login.body.error).toEqual({
+      code: "INVALID_CREDENTIALS", message: "Invalid NRIC, password, or sign-in mode.",
+    });
+    expect(feedback.status).toBe(400);
+    expect(feedback.body.error).toEqual({ code: "VALIDATION_ERROR", message: "Please enter feedback." });
+  });
+
+  it("uses the structured error contract for unknown API routes", async () => {
+    const app = await testApp();
+    const response = await request(app).get("/api/does-not-exist");
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: { code: "NOT_FOUND", message: "API route not found." } });
   });
 });

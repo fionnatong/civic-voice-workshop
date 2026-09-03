@@ -9,6 +9,10 @@ export async function createApp(options = {}) {
   app.use(cors());
   app.use(express.json());
 
+  function sendError(res, status, code, message) {
+    return res.status(status).json({ error: { code, message } });
+  }
+
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, service: "civic-voice-api" });
   });
@@ -18,7 +22,9 @@ export async function createApp(options = {}) {
     const user = db.data.users.find(
       (candidate) => candidate.nric === nric && candidate.password === password && candidate.role === role,
     );
-    if (!user) return res.status(401).json({ error: "Invalid NRIC, password, or sign-in mode." });
+    if (!user) {
+      return sendError(res, 401, "INVALID_CREDENTIALS", "Invalid NRIC, password, or sign-in mode.");
+    }
 
     // Workshop baseline only: this is deliberately not a production session.
     const token = Buffer.from(`${user.nric}:${user.role}`).toString("base64");
@@ -27,14 +33,14 @@ export async function createApp(options = {}) {
 
   app.get("/api/feedback", (req, res) => {
     if (req.header("x-user-role") !== "admin") {
-      return res.status(403).json({ error: "Admin access required." });
+      return sendError(res, 403, "FORBIDDEN", "Admin access required.");
     }
     return res.json({ feedback: db.data.feedback });
   });
 
   app.post("/api/feedback", async (req, res) => {
     const { nric, name, message } = req.body ?? {};
-    if (!message) return res.status(400).json({ error: "Please enter feedback." });
+    if (!message) return sendError(res, 400, "VALIDATION_ERROR", "Please enter feedback.");
     const feedback = {
       id: crypto.randomUUID(), nric, name, message, category: "General", status: "New",
       createdAt: new Date().toISOString(),
@@ -42,6 +48,15 @@ export async function createApp(options = {}) {
     db.data.feedback.unshift(feedback);
     await db.write();
     return res.status(201).json({ feedback });
+  });
+
+  app.use("/api", (_req, res) => sendError(res, 404, "NOT_FOUND", "API route not found."));
+
+  app.use((error, _req, res, next) => {
+    if (error instanceof SyntaxError && "body" in error) {
+      return sendError(res, 400, "INVALID_JSON", "Request body must be valid JSON.");
+    }
+    return next(error);
   });
 
   return app;
