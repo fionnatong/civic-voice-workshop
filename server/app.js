@@ -3,6 +3,15 @@ import express from "express";
 import cors from "cors";
 import { createDb } from "./lib/db.js";
 
+function normalizeFeedbackMessage(message) {
+  return String(message)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export async function createApp(options = {}) {
   const db = options.db ?? (await createDb());
   const app = express();
@@ -36,7 +45,7 @@ export async function createApp(options = {}) {
     const { nric, name, message } = req.body ?? {};
     if (!message) return res.status(400).json({ error: "Please enter feedback." });
     const feedback = {
-      id: crypto.randomUUID(), nric, name, message, category: "General", status: "New",
+      id: crypto.randomUUID(), nric, name, message: normalizeFeedbackMessage(message), category: "General", status: "New",
       createdAt: new Date().toISOString(),
     };
     db.data.feedback.unshift(feedback);

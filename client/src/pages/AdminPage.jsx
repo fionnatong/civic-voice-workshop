@@ -23,7 +23,8 @@ export function AdminPage({ user }) {
           <article className="feedback-row" key={item.id}>
             <div>
               <div className="feedback-meta">{item.name} · {new Date(item.createdAt).toLocaleDateString()}</div>
-              <p>{item.message}</p>
+              {/* React escapes this string; never render feedback as HTML. */}
+              <p>{String(item.message)}</p>
             </div>
             <span className="status-pill">{item.status}</span>
           </article>
