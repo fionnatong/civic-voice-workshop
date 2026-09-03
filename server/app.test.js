@@ -57,3 +57,51 @@ describe("CivicVoice baseline API", () => {
     expect(response.body.feedback.map((item) => item.id)).toEqual(["newest", "middle", "oldest"]);
   });
 });
+
+describe("CV-024 admin API contract", () => {
+  it("returns the admin identity and token after a successful admin sign-in", async () => {
+    const { app } = await testApp();
+
+    const response = await request(app).post("/api/login").send({
+      nric: "S0000002B", password: "admin123", role: "admin",
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      token: Buffer.from("S0000002B:admin").toString("base64"),
+      user: { nric: "S0000002B", name: "Daniel Tan", role: "admin" },
+    });
+  });
+
+  it("returns the inbox payload to an admin request", async () => {
+    const { app } = await testApp();
+
+    const response = await request(app)
+      .get("/api/feedback")
+      .set("x-user-role", "admin");
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      feedback: [{
+        id: "fb-seed-1",
+        nric: "S0000001A",
+        name: "Aisha Rahman",
+        message: "The new sheltered walkway near the library is helpful, but the lights turn off too early.",
+        category: "General",
+        status: "New",
+        createdAt: "2026-08-29T09:14:00.000Z",
+      }],
+    });
+  });
+
+  it("returns the forbidden-access contract to a citizen inbox request", async () => {
+    const { app } = await testApp();
+
+    const response = await request(app)
+      .get("/api/feedback")
+      .set("x-user-role", "citizen");
+
+    expect(response.status).toBe(403);
+    expect(response.body).toEqual({ error: "Admin access required." });
+  });
+});
