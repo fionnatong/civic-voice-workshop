@@ -4,10 +4,18 @@ import { getFeedback } from "../api";
 export function AdminPage({ user }) {
   const [feedback, setFeedback] = useState([]);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
 
   useEffect(() => {
-    getFeedback(user).then((response) => setFeedback(response.feedback)).catch((requestError) => setError(requestError.message));
-  }, [user]);
+    getFeedback(user, page)
+      .then((response) => {
+        setFeedback(response.feedback);
+        setPagination(response.pagination);
+        if (response.pagination.page !== page) setPage(response.pagination.page);
+      })
+      .catch((requestError) => setError(requestError.message));
+  }, [user, page]);
 
   return (
     <main className="page-shell admin-shell">
@@ -28,6 +36,11 @@ export function AdminPage({ user }) {
             <span className="status-pill">{item.status}</span>
           </article>
         ))}
+        {pagination && <nav className="pagination" aria-label="Feedback pages">
+          <button type="button" className="text-button" disabled={pagination.page === 1} onClick={() => setPage((current) => current - 1)}>Previous</button>
+          <span>Page {pagination.page} of {pagination.totalPages}</span>
+          <button type="button" className="text-button" disabled={pagination.page === pagination.totalPages} onClick={() => setPage((current) => current + 1)}>Next</button>
+        </nav>}
       </section>
     </main>
   );
