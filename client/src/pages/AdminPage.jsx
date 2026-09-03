@@ -21,7 +21,7 @@ export function AdminPage({ user }) {
         <div className="list-header"><strong>Latest feedback</strong><span>{feedback.length} items</span></div>
         {feedback.map((item) => (
           <article className="feedback-row" key={item.id}>
-            <div>
+            <div className="feedback-content">
               <div className="feedback-meta">{item.name} · {new Date(item.createdAt).toLocaleDateString()}</div>
               <p>{item.message}</p>
             </div>
