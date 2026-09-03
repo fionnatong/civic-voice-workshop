@@ -53,6 +53,16 @@ textarea { resize: vertical; line-height: 1.6; }
 .feedback-row p { margin: 8px 0 0; line-height: 1.55; }
 .feedback-meta { color: #69747b; font-size: 13px; }
 .status-pill { align-self: flex-start; white-space: nowrap; background: #fff1df; color: #9a5b00; border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 700; }
+.feedback-actions { display: grid; justify-items: end; align-content: start; gap: 10px; }
+.feedback-actions .text-button { font-size: 14px; }
+.back-button { border: 0; background: none; padding: 0; margin-bottom: 26px; color: #b2252a; font-weight: 700; }
+.feedback-detail { background: white; border: 1px solid #e2dfd7; border-radius: 14px; padding: 28px; box-shadow: 0 8px 30px rgba(28,36,42,.04); }
+.feedback-detail dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 32px; margin: 0; }
+.feedback-detail dl > div { min-width: 0; }
+.feedback-detail dt { color: #69747b; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.feedback-detail dd { margin: 7px 0 0; overflow-wrap: anywhere; line-height: 1.55; }
+.feedback-detail .detail-message { grid-column: 1 / -1; }
+.feedback-detail .detail-message dd { white-space: pre-wrap; }
 @media (max-width: 760px) {
   .split-layout { grid-template-columns: 1fr; }
   .intro-panel { min-height: 360px; padding: 58px 8vw; }
@@ -62,4 +72,6 @@ textarea { resize: vertical; line-height: 1.6; }
   .signed-in { display: none; }
   .form-footer { align-items: stretch; flex-direction: column; }
   .form-footer .primary-button { width: 100%; }
+  .feedback-actions { justify-items: start; }
+  .feedback-detail dl { grid-template-columns: 1fr; }
 }
