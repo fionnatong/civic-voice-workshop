@@ -9,7 +9,7 @@ import { createDb } from "./lib/db.js";
 async function testApp() {
   const directory = await mkdtemp(path.join(os.tmpdir(), "civic-voice-"));
   const db = await createDb(path.join(directory, "db.json"));
-  return createApp({ db });
+  return { app: await createApp({ db }), db };
 }
 
 describe("CivicVoice baseline API", () => {
@@ -20,7 +20,7 @@ describe("CivicVoice baseline API", () => {
   });
 
   it("logs in the seeded citizen", async () => {
-    const app = await testApp();
+    const { app } = await testApp();
     const response = await request(app).post("/api/login").send({
       nric: "S0000001A", password: "citizen123", role: "citizen",
     });
@@ -29,7 +29,7 @@ describe("CivicVoice baseline API", () => {
   });
 
   it("accepts feedback", async () => {
-    const app = await testApp();
+    const { app } = await testApp();
     const response = await request(app).post("/api/feedback").send({
       nric: "S0000001A", name: "Aisha Rahman", message: "Please add more benches.",
     });
@@ -38,8 +38,23 @@ describe("CivicVoice baseline API", () => {
   });
 
   it("blocks the feedback list without the admin role header", async () => {
-    const app = await testApp();
+    const { app } = await testApp();
     const response = await request(app).get("/api/feedback");
     expect(response.status).toBe(403);
+  });
+
+  it("updates an admin-selected status and persists it", async () => {
+    const { app, db } = await testApp();
+    const id = db.data.feedback[0].id;
+
+    const response = await request(app)
+      .patch(`/api/feedback/${id}/status`)
+      .set("x-user-role", "admin")
+      .send({ status: "In review" });
+
+    expect(response.status).toBe(200);
+    expect(response.body.feedback.status).toBe("In review");
+    await db.read();
+    expect(db.data.feedback[0].status).toBe("In review");
   });
 });
