@@ -5,6 +5,11 @@ import { createDb } from "./lib/db.js";
 
 export async function createApp(options = {}) {
   const db = options.db ?? (await createDb());
+  const loginRateLimit = {
+    maxFailedAttempts: options.loginRateLimit?.maxFailedAttempts ?? 5,
+    windowMs: options.loginRateLimit?.windowMs ?? 15 * 60 * 1000,
+  };
+  const failedLoginAttempts = new Map();
   const app = express();
   app.use(cors());
   app.use(express.json());
@@ -15,10 +20,30 @@ export async function createApp(options = {}) {
 
   app.post("/api/login", (req, res) => {
     const { nric, password, role } = req.body ?? {};
+    const attemptKey = `${req.ip}:${String(nric ?? "").toUpperCase()}`;
+    const now = Date.now();
+    const attempts = (failedLoginAttempts.get(attemptKey) ?? []).filter(
+      (attemptedAt) => now - attemptedAt < loginRateLimit.windowMs,
+    );
     const user = db.data.users.find(
       (candidate) => candidate.nric === nric && candidate.password === password && candidate.role === role,
     );
-    if (!user) return res.status(401).json({ error: "Invalid NRIC, password, or sign-in mode." });
+    if (!user) {
+      if (attempts.length >= loginRateLimit.maxFailedAttempts) {
+        const retryAfterSeconds = Math.ceil((loginRateLimit.windowMs - (now - attempts[0])) / 1000);
+        res.set("Retry-After", String(retryAfterSeconds));
+        return res.status(429).json({
+          error: "Too many failed sign-in attempts. Please wait a few minutes before trying again.",
+          retryAfterSeconds,
+        });
+      }
+      failedLoginAttempts.set(attemptKey, [...attempts, now]);
+      return res.status(401).json({ error: "Invalid NRIC, password, or sign-in mode." });
+    }
+
+    // A valid credential proves the user is no longer making failed attempts.
+    // Let it through and reset its failure history, even after a prior lockout.
+    failedLoginAttempts.delete(attemptKey);
 
     // Workshop baseline only: this is deliberately not a production session.
     const token = Buffer.from(`${user.nric}:${user.role}`).toString("base64");
