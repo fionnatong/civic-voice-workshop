@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { login } from "../api";
+import { isValidWorkshopId, normalizeWorkshopId } from "../validation";
 
 export function LoginPage({ onLogin }) {
   const [role, setRole] = useState("citizen");
@@ -10,10 +11,15 @@ export function LoginPage({ onLogin }) {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    setBusy(true);
     setError("");
+    if (!isValidWorkshopId(nric)) {
+      setError("Enter a valid workshop ID, for example S0000001A.");
+      return;
+    }
+
+    setBusy(true);
     try {
-      const session = await login({ nric, password, role });
+      const session = await login({ nric: normalizeWorkshopId(nric), password, role });
       onLogin(session);
     } catch (requestError) {
       setError(requestError.message);
@@ -49,7 +55,7 @@ export function LoginPage({ onLogin }) {
             <label>Password
               <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" />
             </label>
-            {error && <p className="error-message">{error}</p>}
+            {error && <p className="error-message" role="alert">{error}</p>}
             <button className="primary-button" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button>
           </form>
           <details className="demo-help">
