@@ -24,7 +24,7 @@ export function AdminPage({ user }) {
           <article className="feedback-row" key={item.id}>
             <div>
               <div className="feedback-meta">
-                {[item.name, item.nric && maskNric(item.nric), new Date(item.createdAt).toLocaleDateString()].filter(Boolean).join(" · ")}
+                {[item.name, item.nric && maskNric(item.nric), item.category, new Date(item.createdAt).toLocaleDateString()].filter(Boolean).join(" · ")}
               </div>
               <p>{item.message}</p>
             </div>
