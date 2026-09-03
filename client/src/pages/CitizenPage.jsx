@@ -11,6 +11,10 @@ export function CitizenPage({ user }) {
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
+    if (!message.trim()) {
+      setError("Please enter feedback.");
+      return;
+    }
     if (message.length > MAX_MESSAGE_LENGTH) {
       setError(`Feedback must be ${MAX_MESSAGE_LENGTH} characters or fewer.`);
       return;
