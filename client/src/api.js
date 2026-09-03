@@ -16,6 +16,10 @@ export function login(credentials) {
 export function submitFeedback(feedback) {
   return api("/api/feedback", { method: "POST", body: JSON.stringify(feedback) });
 }
-export function getFeedback(user) {
-  return api("/api/feedback", { headers: { "x-user-role": user.role } });
+export function getFeedback(user, filters = {}) {
+  const query = new URLSearchParams();
+  if (filters.category) query.set("category", filters.category);
+  if (filters.status) query.set("status", filters.status);
+  const suffix = query.size ? `?${query}` : "";
+  return api(`/api/feedback${suffix}`, { headers: { "x-user-role": user.role } });
 }
