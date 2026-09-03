@@ -5,6 +5,7 @@ const MAX_MESSAGE_LENGTH = 500;
 
 export function CitizenPage({ user }) {
   const [message, setMessage] = useState("");
+  const [category, setCategory] = useState("Estate");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,7 +21,7 @@ export function CitizenPage({ user }) {
       return;
     }
     try {
-      await submitFeedback({ nric: user.nric, name: user.name, message });
+      await submitFeedback({ nric: user.nric, name: user.name, message, category });
       setSubmitted(true);
       setMessage("");
     } catch (requestError) {
@@ -46,6 +47,14 @@ export function CitizenPage({ user }) {
               onChange={(event) => setMessage(event.target.value.slice(0, MAX_MESSAGE_LENGTH))}
               placeholder="Share your feedback here..."
             />
+          </label>
+          <label htmlFor="feedback-category">Category
+            <select id="feedback-category" value={category} onChange={(event) => setCategory(event.target.value)}>
+              <option>Estate</option>
+              <option>Transport</option>
+              <option>Environment</option>
+              <option>Other</option>
+            </select>
           </label>
           <div className="form-footer">
             <div>
